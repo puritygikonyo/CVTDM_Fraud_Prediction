@@ -9,13 +9,17 @@ Structure
   - Content introduction: Why is fraud a problem? What measures are already taken to prevent fraud? ...
 
 2. Data Preparation 03.12.
-  - Import 27.11.
-  - Sample 27.11.
+  - Import 27.11. Done
+  - Sample 27.11. Done
   - Clean 30.11.
-  - NAs 27.11.
-  - Add features 30.11.
-  - Standardisation 30.11.
-  - Dimensions reduction 02.12.
+    - Anormalities (like: Differences do not match)
+    - Duplicates: There should be none
+    - NAs 27.11. Done
+    - constant data: There should be none
+    - find outliers, evaluate them
+  - Add features 30.11. resp.: **Artem**
+  - Standardisation 30.11. **Purity**
+  - Dimensions reduction 02.12. **Hannes**
   
 3. Machine Learning part 10.12.
  - Baseline models
