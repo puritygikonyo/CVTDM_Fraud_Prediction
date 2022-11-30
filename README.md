@@ -17,6 +17,8 @@ Structure
     - NAs 27.11. Done
     - constant data: There should be none
     - find outliers, evaluate them
+    - obvious inconsistencies (e.g. explain why the balances dont match for payments)
+    - Correction of inconsistencies
   - Add features 30.11. resp.: **Artem**
   - Standardisation 30.11. **Purity**
   - Dimensions reduction 02.12. **Hannes**
