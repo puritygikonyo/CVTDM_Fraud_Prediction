@@ -6,6 +6,7 @@ fraud <- fread("onlinefraud.csv")
 # Missing values analysis
 gg_miss_var(fraud)
 
+print("test")
 # Random sampling
 set.seed(1)
 simpleSample1 <- sample(c(TRUE, FALSE), nrow(fraud), replace=TRUE, prob=c(0.05,0.95))
