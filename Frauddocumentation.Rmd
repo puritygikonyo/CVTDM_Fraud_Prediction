@@ -1,0 +1,142 @@
+---
+title: "Fraudproject"
+author: "Purity Gikonyo"
+date: "2022-12-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# {.tabset}
+
+## First headline
+```{r, message=FALSE, warning=FALSE}
+library(data.table)
+library(dplyr)
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+setwd("C:/Users/gikon/Downloads/Fraud")
+fraud <- fread("onlinefraud.csv")
+```
+```{r, message=FALSE, warning=FALSE}
+fraudIndices <- data.table("index" = seq(1:nrow(fraud)), fraud)
+fraudIndices$debt <- fraud$oldbalanceOrg - fraud$amount
+fraudIndices$isFraud <- as.factor(fraudIndices$isFraud)
+```
+
+## First headline
+```{r, message=FALSE, warning=FALSE}
+fraudIndices <- fraudIndices %>% 
+  select( -one_of('nameOrig', 'nameDest', 'isFlaggedFraud')) %>% filter(type %in% c('CASH_OUT','TRANSFER'))
+```
+
+```{r, message=FALSE, warning=FALSE}
+fraudIndices$CASH_OUT <- ifelse(fraudIndices$type == "CASH_OUT", 1, 0)
+fraudIndices$TRANSFER <- ifelse(fraudIndices$type == "TRANSFER", 1, 0)
+fraudIndices <- fraudIndices[,-2]
+```
+
+```{r, message=FALSE, warning=FALSE}
+training <- fraudIndices %>%
+  group_by(isFraud) %>%
+  sample_n(size=8213/2)
+
+list <- training$index
+validationLarge <- fraudIndices[-list,]
+isfrauds <- validationLarge[, .N, by = isFraud]
+#validationSmall <- validationLarge %>%
+  #group_by(isFraud) %>%
+  #sample_n(size=isfrauds)
+rm(isfrauds)
+```
+
+## First headline {.tabset}
+```{r, message=FALSE, warning=FALSE}
+library(rpart)
+library(rpart.plot)
+library(caret) #for the confusion matrix
+
+classTree <- rpart(isFraud ~., data = training)
+prp(classTree)
+predict_dt <- predict(classTree, validationLarge, type = "class")
+confusionMatrix(as.factor(validationLarge$isFraud), predict_dt)
+```
+
+### second...
+```{r, message=FALSE, warning=FALSE}
+library(pROC, quietly=TRUE)
+library(microbenchmark, quietly=TRUE)
+library(caTools)
+library(ROCR) 
+
+logistic_model <- glm(isFraud~., data = as.data.frame(training), family = "binomial")
+summary(logistic_model)
+
+###Calculate the accuracy of the logistics regression model
+log_predict <- predict(logistic_model, validationLarge, type ="response")
+#1.Changing the probabilities
+log_predict <- ifelse(log_predict >0.5, 1,0)
+#2.Evaluating the model accuracy.
+table(validationLarge$isFraud, log_predict)
+log_accuracy <- mean(log_predict != validationLarge$isFraud)
+print(paste('Accuracy =', 1-log_accuracy))
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+as.data.frame(table(validationLarge$isFraud))
+ROCPred <- prediction(log_predict, validationLarge$isFraud) 
+ROCPer <- performance(ROCPred, measure = "tpr", 
+                      x.measure = "fpr")
+
+auc <- performance(ROCPred, measure = "auc")
+auc <- auc@y.values[[1]]
+auc
+plot(ROCPer)
+plot(ROCPer, colorize = TRUE, 
+     print.cutoffs.at = seq(0.1, by = 0.1), 
+     main = "ROC CURVE LOGISTIC REGRESSION")
+abline(a = 0, b = 1)
+
+auc <- round(auc, 4)
+legend(.6, .4, auc, title = "AUC", cex = 1)
+library(e1071)
+
+library(caret)
+
+confusionMatrix(factor(log_predict), factor(validationLarge$isFraud))
+confusionMatrix(factor(log_predict), factor(validationLarge$isFraud), mode = "everything", positive="1")
+
+```
+# second ...
+```{r, message=FALSE, warning=FALSE}
+library(randomForest)
+random.forest <- randomForest(isFraud~. , data = training, importance = TRUE)
+random.forest
+#We predict how well our random forest model predicts on the training dataset.
+pred.train <- predict(random.forest, training, type = "class")
+table(pred.train, training$isFraud)
+#We now look at the validation set.
+pred.test <- predict(random.forest, validationLarge, type = "class")
+#Check classification accuracy.
+mean(pred.test == validationLarge$isFraud)
+table(pred.test, validationLarge$isFraud)
+confusionMatrix(pred.test,validationLarge$isFraud)
+### The random forest performs very well with an accuracy of 99.99%
+```
+
+```{r, message=FALSE, warning=FALSE}
+library(neuralnet)
+#Fit the neural network.
+nn <- neuralnet(isFraud~., data = training, hidden = 1, act.fct = "logistic", linear.output = FALSE)3
+```
+
+
+
+
+
